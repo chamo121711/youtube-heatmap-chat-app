@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube分析ツール群</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .tool-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        
+        .tool-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+        
+        .tool-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .tool-card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .tool-card p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
+        .input-group input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .input-group input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-display {
+            display: block;
+            padding: 12px 15px;
+            background: white;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .file-input-display:hover {
+            border-color: #764ba2;
+            background: #f5f5f5;
+        }
+        
+        .file-input-display.has-file {
+            border-style: solid;
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .status-message.active {
+            display: block;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            margin: 40px 0;
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .results.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card p {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .surge-list {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .surge-list h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .surge-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .surge-rank {
+            background: #ffc107;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .surge-info {
+            flex: 1;
+            margin-left: 15px;
+        }
+        
+        .surge-time {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .surge-rate {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .graph-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .graph-container img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .instructions h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ YouTube分析ツール群</h1>
+            <p>3つの独立したツールで柔軟に分析</p>
+        </div>
+        
+        <div class="content">
+            <div class="instructions">
+                <h3>📖 使い方</h3>
+                <ol>
+                    <li><strong>ツール1:</strong> 動画URLからチャットをダウンロード（Excelファイル）</li>
+                    <li><strong>ツール2:</strong> 動画URLからヒートマップをダウンロード（テキストファイル）</li>
+                    <li><strong>ツール3:</strong> ダウンロードしたファイルをアップロードして分析</li>
+                </ol>
+                <p style="margin-top: 10px; color: #1976d2;">💡 各ツールは単独で使用できます！必要なツールだけご利用ください。</p>
+            </div>
+            
+            <div class="tool-grid">
+                <!-- ツール1: チャットダウンローダー -->
+                <div class="tool-card">
+                    <div class="tool-icon">💬</div>
+                    <h2>ツール1: チャットダウンローダー</h2>
+                    <p>YouTube動画のチャットを取得してExcelファイルとしてダウンロードします。</p>
+                    
+                    <div class="input-group">
+                        <label for="chat-url">YouTube動画URL</label>
+                        <input type="text" id="chat-url" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
+                    
+                    <button class="btn" id="chat-download-btn">📥 チャットをダウンロード</button>
+                    
+                    <div class="loading" id="chat-loading">
+                        <div class="spinner"></div>
+                        <p>チャット取得中...</p>
+                    </div>
+                    
+                    <div class="status-message" id="chat-status"></div>
+                </div>
+                
+                <!-- ツール2: ヒートマップダウンローダー -->
+                <div class="tool-card">
+                    <div class="tool-icon">🔥</div>
+                    <h2>ツール2: ヒートマップダウンローダー</h2>
+                    <p>YouTube動画のヒートマップを取得してテキストファイルとしてダウンロードします。</p>
+                    
+                    <div class="input-group">
+                        <label for="heatmap-url">YouTube動画URL</label>
+                        <input type="text" id="heatmap-url" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
+                    
+                    <button class="btn" id="heatmap-download-btn">📥 ヒートマップをダウンロード</button>
+                    
+                    <div class="loading" id="heatmap-loading">
+                        <div class="spinner"></div>
+                        <p>ヒートマップ取得中...</p>
+                    </div>
+                    
+                    <div class="status-message" id="heatmap-status"></div>
+                </div>
+                
+                <!-- ツール3: データ分析ツール -->
+                <div class="tool-card">
+                    <div class="tool-icon">📊</div>
+                    <h2>ツール3: データ分析ツール</h2>
+                    <p>ダウンロードしたチャットとヒートマップを統合して分析します。</p>
+                    
+                    <form id="analyze-form">
+                        <div class="input-group">
+                            <label>チャットデータ（Excel）</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="analyze-chat-file" accept=".xlsx,.xls" required>
+                                <div class="file-input-display" id="analyze-chat-display">
+                                    📄 ファイルを選択
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>ヒートマップデータ（テキスト）</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="analyze-heatmap-file" accept=".txt" required>
+                                <div class="file-input-display" id="analyze-heatmap-display">
+                                    📄 ファイルを選択
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn">🚀 分析を開始</button>
+                    </form>
+                    
+                    <div class="loading" id="analyze-loading">
+                        <div class="spinner"></div>
+                        <p>データ分析中...</p>
+                    </div>
+                    
+                    <div class="status-message" id="analyze-status"></div>
+                </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <!-- 分析結果表示エリア -->
+            <div class="results" id="results">
+                <h2 style="margin-bottom: 20px; font-size: 2em;">📊 分析結果</h2>
+                
+                <div class="stats-grid" id="stats-grid"></div>
+                
+                <div class="surge-list" id="surge-list"></div>
+                
+                <div class="graph-container">
+                    <img id="graph-image" src="" alt="分析グラフ">
+                </div>
+                
+                <button class="btn btn-success" id="download-csv-btn">💾 CSVをダウンロード</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ツール1: チャットダウンローダー
+        document.getElementById('chat-download-btn').addEventListener('click', async function() {
+            const url = document.getElementById('chat-url').value;
+            const btn = this;
+            const loading = document.getElementById('chat-loading');
+            const status = document.getElementById('chat-status');
+            
+            if (!url) {
+                showStatus(status, 'error', 'YouTube動画URLを入力してください');
+                return;
+            }
+            
+            btn.disabled = true;
+            loading.classList.add('active');
+            status.classList.remove('active');
+            
+            try {
+                const response = await fetch('/download_chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ video_url: url })
+                });
+                
+                if (response.ok && response.headers.get('content-type').includes('application/vnd.openxmlformats')) {
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = response.headers.get('content-disposition').split('filename=')[1];
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    
+                    showStatus(status, 'success', '✓ チャットのダウンロードが完了しました！');
+                } else {
+                    const data = await response.json();
+                    showStatus(status, 'error', data.message);
+                }
+            } catch (error) {
+                showStatus(status, 'error', 'エラーが発生しました: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('active');
+            }
+        });
+        
+        // ツール2: ヒートマップダウンローダー
+        document.getElementById('heatmap-download-btn').addEventListener('click', async function() {
+            const url = document.getElementById('heatmap-url').value;
+            const btn = this;
+            const loading = document.getElementById('heatmap-loading');
+            const status = document.getElementById('heatmap-status');
+            
+            if (!url) {
+                showStatus(status, 'error', 'YouTube動画URLを入力してください');
+                return;
+            }
+            
+            btn.disabled = true;
+            loading.classList.add('active');
+            status.classList.remove('active');
+            
+            try {
+                const response = await fetch('/download_heatmap', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ video_url: url })
+                });
+                
+                if (response.ok && response.headers.get('content-type').includes('text/plain')) {
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = response.headers.get('content-disposition').split('filename=')[1];
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    
+                    showStatus(status, 'success', '✓ ヒートマップのダウンロードが完了しました！');
+                } else {
+                    const data = await response.json();
+                    showStatus(status, 'error', data.message);
+                }
+            } catch (error) {
+                showStatus(status, 'error', 'エラーが発生しました: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('active');
+            }
+        });
+        
+        // ファイル選択UI
+        document.getElementById('analyze-chat-file').addEventListener('change', function(e) {
+            const display = document.getElementById('analyze-chat-display');
+            if (e.target.files.length > 0) {
+                display.textContent = '✓ ' + e.target.files[0].name;
+                display.classList.add('has-file');
+            }
+        });
+        
+        document.getElementById('analyze-heatmap-file').addEventListener('change', function(e) {
+            const display = document.getElementById('analyze-heatmap-display');
+            if (e.target.files.length > 0) {
+                display.textContent = '✓ ' + e.target.files[0].name;
+                display.classList.add('has-file');
+            }
+        });
+        
+        // ツール3: データ分析
+        document.getElementById('analyze-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('chat_file', document.getElementById('analyze-chat-file').files[0]);
+            formData.append('heatmap_file', document.getElementById('analyze-heatmap-file').files[0]);
+            
+            const loading = document.getElementById('analyze-loading');
+            const status = document.getElementById('analyze-status');
+            const results = document.getElementById('results');
+            
+            loading.classList.add('active');
+            status.classList.remove('active');
+            results.classList.remove('active');
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus(status, 'success', data.message);
+                    displayResults(data);
+                } else {
+                    showStatus(status, 'error', data.message);
+                }
+            } catch (error) {
+                showStatus(status, 'error', 'エラーが発生しました: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+            }
+        });
+        
+        // 結果表示
+        function displayResults(data) {
+            // 統計情報
+            const statsGrid = document.getElementById('stats-grid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <h3>総チャット数</h3>
+                    <p>${data.stats.total_chats.toLocaleString()}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>最大チャット数</h3>
+                    <p>${data.stats.max_chat_count}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>平均チャット数</h3>
+                    <p>${data.stats.avg_chat_count.toFixed(2)}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>相関係数</h3>
+                    <p>${data.stats.correlation.toFixed(3)}</p>
+                </div>
+            `;
+            
+            // 上昇率トップ5
+            const surgeList = document.getElementById('surge-list');
+            let surgeHtml = '<h3>⭐ チャット急増トップ5</h3>';
+            data.stats.top_surges.forEach((surge, index) => {
+                surgeHtml += `
+                    <div class="surge-item">
+                        <div class="surge-rank">${index + 1}</div>
+                        <div class="surge-info">
+                            <span class="surge-time">${surge.time_label} (${surge.time}秒)</span>
+                            <br>
+                            <small>チャット数: ${surge.chat_count}件</small>
+                        </div>
+                        <div class="surge-rate">+${surge.surge_rate.toFixed(1)}%</div>
+                    </div>
+                `;
+            });
+            surgeList.innerHTML = surgeHtml;
+            
+            // グラフ
+            document.getElementById('graph-image').src = 'data:image/png;base64,' + data.graph;
+            
+            // 結果表示
+            document.getElementById('results').classList.add('active');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // CSVダウンロード
+        document.getElementById('download-csv-btn').addEventListener('click', function() {
+            window.location.href = '/download_csv';
+        });
+        
+        // ステータス表示ヘルパー
+        function showStatus(element, type, message) {
+            element.className = 'status-message active ' + type;
+            element.textContent = message;
+        }
+    </script>
+</body>
+</html>
